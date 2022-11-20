@@ -17,6 +17,7 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Padutronics.DependencyInjection" Version="0.1.0" />
+        <PackageReference Include="Padutronics.Diagnostics.Tracing" Version="0.1.0" />
         <PackageReference Include="Padutronics.Generics" Version="0.1.0" />
         <PackageReference Include="Padutronics.IO.Paths" Version="0.1.0" />
         <PackageReference Include="Padutronics.Reflection" Version="0.6.0" />

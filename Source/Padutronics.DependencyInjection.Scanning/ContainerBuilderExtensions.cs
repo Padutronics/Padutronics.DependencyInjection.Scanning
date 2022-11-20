@@ -4,6 +4,7 @@ public static class ContainerBuilderExtensions
 {
     public static void Scan(this IContainerBuilder @this, ScannerConfigurationCallback configurationCallback)
     {
-        configurationCallback(new ScannerConfigurator()).Scan(@this);
+        var containerScanner = new ContainerScanner();
+        containerScanner.Scan(containerBuilder: @this, configurationCallback);
     }
 }

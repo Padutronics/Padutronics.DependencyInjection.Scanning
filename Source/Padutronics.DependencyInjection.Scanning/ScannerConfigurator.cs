@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
+using Trace = Padutronics.Diagnostics.Tracing.Trace<Padutronics.DependencyInjection.Scanning.ScannerConfigurator>;
+
 namespace Padutronics.DependencyInjection.Scanning;
 
 internal sealed class ScannerConfigurator : IScannerConfigurator, IConfigurationBuilder, IAssemblyWithFilterStage, IScannableConfigurationStage, IScannableConventionStage
@@ -20,13 +22,51 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
     private readonly ICollection<ITypeFilter> includeFilters = new List<ITypeFilter>();
     private readonly IDictionary<Type, TypeConfigurationCallback> typeToConfigurationCallbackMappings = new Dictionary<Type, TypeConfigurationCallback>();
 
-    private IAssemblyWithFilterStage AddAssemblyConfigurationBuilder(IAssemblyFinder assemblyFinder, AssemblyConfigurationCallback configurationCallback)
+    private ScannerConfigurator AddAssemblyFinder(IAssemblyFinder assemblyFinder, AssemblyConfigurationCallback configurationCallback)
     {
+        Trace.Call($"Added assembly finder: {assemblyFinder.GetType()}.");
+
         var configurator = new AssemblyConfigurator(assemblyFinder);
 
         assemblyConfigurationBuilders.Add(configurator);
 
         configurationCallback(configurator);
+
+        return this;
+    }
+
+    private ScannerConfigurator AddConfiguration(Type type, TypeConfigurationCallback configurationCallback)
+    {
+        Trace.Call($"Added configuration for type: {type}.");
+
+        typeToConfigurationCallbackMappings.Add(type, configurationCallback);
+
+        return this;
+    }
+
+    private ScannerConfigurator AddConvention(IScanConvention convention)
+    {
+        Trace.Call($"Added scan convention: {convention.GetType()}.");
+
+        conventions.Add(convention);
+
+        return this;
+    }
+
+    private ScannerConfigurator AddExcludeFilter(ITypeFilter filter)
+    {
+        Trace.Call($"Added exclude filter: {filter.GetType()}.");
+
+        excludeFilters.Add(filter);
+
+        return this;
+    }
+
+    private ScannerConfigurator AddIncludeFilter(ITypeFilter filter)
+    {
+        Trace.Call($"Added include filter: {filter.GetType()}.");
+
+        includeFilters.Add(filter);
 
         return this;
     }
@@ -38,7 +78,7 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
 
     public IAssemblyWithFilterStage AssembliesFromPath(DirectoryPath path, AssemblyConfigurationCallback configurationCallback)
     {
-        return AddAssemblyConfigurationBuilder(new PathAssemblyFinder(path), configurationCallback);
+        return AddAssemblyFinder(new PathAssemblyFinder(path), configurationCallback);
     }
 
     public IAssemblyWithFilterStage AssembliesFromPath(DirectoryPath path, bool includeExecutables)
@@ -48,7 +88,7 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
 
     public IAssemblyWithFilterStage AssembliesFromPath(DirectoryPath path, bool includeExecutables, AssemblyConfigurationCallback configurationCallback)
     {
-        return AddAssemblyConfigurationBuilder(new PathAssemblyFinder(path, includeExecutables), configurationCallback);
+        return AddAssemblyFinder(new PathAssemblyFinder(path, includeExecutables), configurationCallback);
     }
 
     public IAssemblyWithFilterStage Assembly(string assemblyName)
@@ -68,7 +108,7 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
 
     public IAssemblyWithFilterStage Assembly(Assembly assembly, AssemblyConfigurationCallback configurationCallback)
     {
-        return AddAssemblyConfigurationBuilder(new ConstantAssemblyFinder(assembly), configurationCallback);
+        return AddAssemblyFinder(new ConstantAssemblyFinder(assembly), configurationCallback);
     }
 
     public IAssemblyWithFilterStage AssemblyContaining(Type type)
@@ -78,7 +118,7 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
 
     public IAssemblyWithFilterStage AssemblyContaining(Type type, AssemblyConfigurationCallback configurationCallback)
     {
-        return AddAssemblyConfigurationBuilder(new TypeAssemblyFinder(type), configurationCallback);
+        return AddAssemblyFinder(new TypeAssemblyFinder(type), configurationCallback);
     }
 
     public IAssemblyWithFilterStage AssemblyContaining<T>()
@@ -93,9 +133,7 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
 
     public IScannableConfigurationStage Configure(Type type, TypeConfigurationCallback configurationCallback)
     {
-        typeToConfigurationCallbackMappings.Add(type, configurationCallback);
-
-        return this;
+        return AddConfiguration(type, configurationCallback);
     }
 
     public IScannableConfigurationStage Configure<T>(TypeConfigurationCallback configurationCallback)
@@ -110,9 +148,7 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
 
     public IFilterStage Exclude(ITypeFilter filter)
     {
-        excludeFilters.Add(filter);
-
-        return this;
+        return AddExcludeFilter(filter);
     }
 
     public IFilterStage Exclude<TFilter>()
@@ -123,13 +159,34 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
 
     private IEnumerable<Type> GetAllTypes()
     {
-        return assemblyConfigurationBuilders
+        Trace.CallStart("Started types retrieval from assemblies.");
+
+        IReadOnlyDictionary<Assembly, IEnumerable<Type>> assemblyToTypesMappings = assemblyConfigurationBuilders
             .Select(assemblyConfigurationBuilder => assemblyConfigurationBuilder.Build())
             .SelectMany(
                 assemblyConfiguration => assemblyConfiguration.AssemblyFinder
                     .FindAssemblies()
-                    .SelectMany(assembly => assemblyConfiguration.TypeFinder.FindTypes(assembly))
+                    .Select(assembly => new
+                    {
+                        Assembly = assembly,
+                        Types = assemblyConfiguration.TypeFinder.FindTypes(assembly)
+                    })
+            )
+            .DistinctBy(assemblyData => assemblyData.Assembly.FullName ?? throw new Exception("Assembly name is null."))
+            .ToDictionary(
+                assemblyData => assemblyData.Assembly,
+                assemblyData => assemblyData.Types
             );
+
+        Trace.Information($"Found {assemblyToTypesMappings.Count} assemblies: [{string.Join(", ", assemblyToTypesMappings.Select(assemblyToTypesMapping => $"\"{assemblyToTypesMapping.Key.FullName}\" ({assemblyToTypesMapping.Value.Count()})"))}].");
+
+        IEnumerable<Type> types = assemblyToTypesMappings
+            .SelectMany(assemblyToTypesMapping => assemblyToTypesMapping.Value)
+            .ToList();
+
+        Trace.CallEnd("Finished types retrieval from assemblies.");
+
+        return types;
     }
 
     private IEnumerable<Type> GetExcludedTypes(IEnumerable<Type> allTypes)
@@ -151,9 +208,7 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
 
     public IFilterStage Include(ITypeFilter filter)
     {
-        includeFilters.Add(filter);
-
-        return this;
+        return AddIncludeFilter(filter);
     }
 
     public IFilterStage Include<TFilter>()
@@ -164,7 +219,12 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
 
     public IScannableConfigurationStage IncludeConfiguration(IConfigurationModule module)
     {
+        Trace.CallStart();
+        Trace.Information($"Including configuration module: {module.GetType()}");
+
         module.Load(configurationBuilder: this);
+
+        Trace.CallEnd();
 
         return this;
     }
@@ -213,6 +273,8 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
 
     public void Scan(IContainerBuilder containerBuilder)
     {
+        Trace.CallStart("Started container scanning.");
+
         IEnumerable<Type> allTypes = GetAllTypes();
 
         IEnumerable<Type> includedTypes = GetIncludedTypes(allTypes);
@@ -232,13 +294,13 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
                 }
             });
         }
+
+        Trace.CallEnd("Finished container scanning.");
     }
 
     public IScannableConventionStage WithConvention(IScanConvention convention)
     {
-        conventions.Add(convention);
-
-        return this;
+        return AddConvention(convention);
     }
 
     public IScannableConventionStage WithConvention<TConvention>()
