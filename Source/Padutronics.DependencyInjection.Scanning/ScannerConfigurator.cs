@@ -10,7 +10,7 @@ using System.Reflection;
 
 namespace Padutronics.DependencyInjection.Scanning;
 
-internal sealed class ScannerConfigurator : IScannerConfigurator, IAssemblyWithFilterStage, IScannableConventionStage
+internal sealed class ScannerConfigurator : IScannerConfigurator, IAssemblyWithFilterStage, IScannableConfigurationStage, IScannableConventionStage
 {
     private static readonly AssemblyConfigurationCallback defaultAssemblyConfigurationCallback = _ => { };
 
@@ -18,6 +18,7 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IAssemblyWithF
     private readonly ICollection<IScanConvention> conventions = new List<IScanConvention>();
     private readonly ICollection<ITypeFilter> excludeFilters = new List<ITypeFilter>();
     private readonly ICollection<ITypeFilter> includeFilters = new List<ITypeFilter>();
+    private readonly IDictionary<Type, TypeConfigurationCallback> typeToConfigurationCallbackMappings = new Dictionary<Type, TypeConfigurationCallback>();
 
     private IAssemblyWithFilterStage AddAssemblyConfigurationBuilder(IAssemblyFinder assemblyFinder, AssemblyConfigurationCallback configurationCallback)
     {
@@ -88,6 +89,18 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IAssemblyWithF
     public IAssemblyWithFilterStage AssemblyContaining<T>(AssemblyConfigurationCallback configurationCallback)
     {
         return AssemblyContaining(typeof(T), configurationCallback);
+    }
+
+    public IScannableConfigurationStage Configure(Type type, TypeConfigurationCallback configurationCallback)
+    {
+        typeToConfigurationCallbackMappings.Add(type, configurationCallback);
+
+        return this;
+    }
+
+    public IScannableConfigurationStage Configure<T>(TypeConfigurationCallback configurationCallback)
+    {
+        return Configure(typeof(T), configurationCallback);
     }
 
     public IFilterStage Exclude(Predicate<Type> predicate)
@@ -162,7 +175,13 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IAssemblyWithF
 
         foreach (IScanConvention convention in conventions)
         {
-            convention.Scan(typeRegistry, containerBuilder);
+            convention.Scan(typeRegistry, containerBuilder, (type, lifetimeStage) =>
+            {
+                if (typeToConfigurationCallbackMappings.TryGetValue(type, out TypeConfigurationCallback? configurator))
+                {
+                    configurator(lifetimeStage);
+                }
+            });
         }
     }
 
