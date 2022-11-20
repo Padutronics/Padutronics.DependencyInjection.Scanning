@@ -10,6 +10,7 @@ public interface IConventionStage : IConfigurationStage
     IScannableConventionStage RegisterConcreteTypesAgainstAllInterfaces(IEnumerable<Type> interfacesToExclude);
     IScannableConventionStage RegisterConcreteTypesAgainstSelf();
     IScannableConventionStage RegisterFactories();
+    IScannableConventionStage RegisterOpenTypesAgainstOpenInterfaces();
     IScannableConventionStage WithConvention(IScanConvention convention);
     IScannableConventionStage WithConvention<TConvention>()
         where TConvention : IScanConvention, new();
