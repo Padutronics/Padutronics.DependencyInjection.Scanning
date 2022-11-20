@@ -5,7 +5,7 @@
         <Nullable>enable</Nullable>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <WarningLevel>5</WarningLevel>
-        <Version>0.0.0</Version>
+        <Version>0.1.0</Version>
         <Authors>Pavel Dubsky</Authors>
         <Company>Padutronics</Company>
         <Product>Padutronics Framework</Product>
