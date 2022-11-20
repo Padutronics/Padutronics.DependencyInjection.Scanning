@@ -190,6 +190,11 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
         return WithConvention<SelfScanConvention>();
     }
 
+    public IScannableConventionStage RegisterFactories()
+    {
+        return WithConvention<FactoryScanConvention>();
+    }
+
     public void Scan(IContainerBuilder containerBuilder)
     {
         IEnumerable<Type> allTypes = GetAllTypes();
