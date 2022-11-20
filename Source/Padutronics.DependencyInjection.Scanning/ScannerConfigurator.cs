@@ -11,53 +11,91 @@ namespace Padutronics.DependencyInjection.Scanning;
 
 internal sealed class ScannerConfigurator : IScannerConfigurator, IScannableConventionStage
 {
-    private readonly ICollection<IAssemblyFinder> assemblyFinders = new List<IAssemblyFinder>();
+    private static readonly AssemblyConfigurationCallback defaultAssemblyConfigurationCallback = _ => { };
+
+    private readonly ICollection<IAssemblyConfigurationBuilder> assemblyConfigurationBuilders = new List<IAssemblyConfigurationBuilder>();
     private readonly ICollection<IScanConvention> conventions = new List<IScanConvention>();
 
-    private IConventionStage AddAssemblyFinder(IAssemblyFinder assemblyFinder)
+    private IConventionStage AddAssemblyConfigurationBuilder(IAssemblyFinder assemblyFinder, AssemblyConfigurationCallback configurationCallback)
     {
-        assemblyFinders.Add(assemblyFinder);
+        var configurator = new AssemblyConfigurator(assemblyFinder);
+
+        assemblyConfigurationBuilders.Add(configurator);
+
+        configurationCallback(configurator);
 
         return this;
     }
 
     public IConventionStage AssembliesFromPath(DirectoryPath path)
     {
-        return AddAssemblyFinder(new PathAssemblyFinder(path));
+        return AssembliesFromPath(path, defaultAssemblyConfigurationCallback);
+    }
+
+    public IConventionStage AssembliesFromPath(DirectoryPath path, AssemblyConfigurationCallback configurationCallback)
+    {
+        return AddAssemblyConfigurationBuilder(new PathAssemblyFinder(path), configurationCallback);
     }
 
     public IConventionStage AssembliesFromPath(DirectoryPath path, bool includeExecutables)
     {
-        return AddAssemblyFinder(new PathAssemblyFinder(path, includeExecutables));
+        return AssembliesFromPath(path, includeExecutables, defaultAssemblyConfigurationCallback);
+    }
+
+    public IConventionStage AssembliesFromPath(DirectoryPath path, bool includeExecutables, AssemblyConfigurationCallback configurationCallback)
+    {
+        return AddAssemblyConfigurationBuilder(new PathAssemblyFinder(path, includeExecutables), configurationCallback);
     }
 
     public IConventionStage Assembly(string assemblyName)
     {
-        return Assembly(System.Reflection.Assembly.Load(assemblyName));
+        return Assembly(assemblyName, defaultAssemblyConfigurationCallback);
+    }
+
+    public IConventionStage Assembly(string assemblyName, AssemblyConfigurationCallback configurationCallback)
+    {
+        return Assembly(System.Reflection.Assembly.Load(assemblyName), configurationCallback);
     }
 
     public IConventionStage Assembly(Assembly assembly)
     {
-        return AddAssemblyFinder(new ConstantAssemblyFinder(assembly));
+        return Assembly(assembly, defaultAssemblyConfigurationCallback);
+    }
+
+    public IConventionStage Assembly(Assembly assembly, AssemblyConfigurationCallback configurationCallback)
+    {
+        return AddAssemblyConfigurationBuilder(new ConstantAssemblyFinder(assembly), configurationCallback);
     }
 
     public IConventionStage AssemblyContaining(Type type)
     {
-        return AddAssemblyFinder(new TypeAssemblyFinder(type));
+        return AssemblyContaining(type, defaultAssemblyConfigurationCallback);
+    }
+
+    public IConventionStage AssemblyContaining(Type type, AssemblyConfigurationCallback configurationCallback)
+    {
+        return AddAssemblyConfigurationBuilder(new TypeAssemblyFinder(type), configurationCallback);
     }
 
     public IConventionStage AssemblyContaining<T>()
     {
-        return AssemblyContaining(typeof(T));
+        return AssemblyContaining<T>(defaultAssemblyConfigurationCallback);
+    }
+
+    public IConventionStage AssemblyContaining<T>(AssemblyConfigurationCallback configurationCallback)
+    {
+        return AssemblyContaining(typeof(T), configurationCallback);
     }
 
     private IEnumerable<Type> GetAllTypes()
     {
-        return assemblyFinders.SelectMany(
-            assemblyFinder => assemblyFinder
-                .FindAssemblies()
-                .SelectMany(assembly => assembly.GetExportedTypes())
-        );
+        return assemblyConfigurationBuilders
+            .Select(assemblyConfigurationBuilder => assemblyConfigurationBuilder.Build())
+            .SelectMany(
+                assemblyConfiguration => assemblyConfiguration.AssemblyFinder
+                    .FindAssemblies()
+                    .SelectMany(assembly => assemblyConfiguration.TypeFinder.FindTypes(assembly))
+            );
     }
 
     public void Scan(IContainerBuilder containerBuilder)
