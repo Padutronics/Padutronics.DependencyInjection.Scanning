@@ -19,5 +19,6 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="../../Source/Padutronics.DependencyInjection.Scanning/Padutronics.DependencyInjection.Scanning.csproj" />
+        <ProjectReference Include="../Padutronics.DependencyInjection.Scanning.TestAssembly/Padutronics.DependencyInjection.Scanning.TestAssembly.csproj" />
     </ItemGroup>
 </Project>
