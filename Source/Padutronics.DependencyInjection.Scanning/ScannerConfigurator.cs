@@ -13,6 +13,13 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IScannableConv
     private readonly ICollection<IAssemblyFinder> assemblyFinders = new List<IAssemblyFinder>();
     private readonly ICollection<IScanConvention> conventions = new List<IScanConvention>();
 
+    private IConventionStage AddAssemblyFinder(IAssemblyFinder assemblyFinder)
+    {
+        assemblyFinders.Add(assemblyFinder);
+
+        return this;
+    }
+
     public IConventionStage Assembly(string assemblyName)
     {
         return Assembly(System.Reflection.Assembly.Load(assemblyName));
@@ -20,9 +27,17 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IScannableConv
 
     public IConventionStage Assembly(Assembly assembly)
     {
-        assemblyFinders.Add(new ConstantAssemblyFinder(assembly));
+        return AddAssemblyFinder(new ConstantAssemblyFinder(assembly));
+    }
 
-        return this;
+    public IConventionStage AssemblyContaining(Type type)
+    {
+        return AddAssemblyFinder(new TypeAssemblyFinder(type));
+    }
+
+    public IConventionStage AssemblyContaining<T>()
+    {
+        return AssemblyContaining(typeof(T));
     }
 
     private IEnumerable<Type> GetAllTypes()
