@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <WarningLevel>5</WarningLevel>
+        <Version>0.0.0</Version>
+        <Authors>Pavel Dubsky</Authors>
+        <Company>Padutronics</Company>
+        <Product>Padutronics Framework</Product>
+        <Description>Dependency injection scanning utilities.</Description>
+        <Copyright>Copyright © Padutronics 2022</Copyright>
+        <PackageProjectUrl>https://github.com/Padutronics/Padutronics.DependencyInjection.Scanning</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Padutronics/Padutronics.DependencyInjection.Scanning</RepositoryUrl>
+        <RepositoryType>Git</RepositoryType>
+    </PropertyGroup>
+</Project>
