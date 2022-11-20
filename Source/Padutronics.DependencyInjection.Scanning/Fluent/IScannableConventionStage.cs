@@ -1,5 +1,5 @@
 namespace Padutronics.DependencyInjection.Scanning.Fluent;
 
-public interface IScannableConventionStage : IConventionStage, IScannable
+public interface IScannableConventionStage : IConventionStage, IConfigurationStage, IScannable
 {
 }

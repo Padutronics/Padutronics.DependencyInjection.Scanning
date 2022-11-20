@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Padutronics.DependencyInjection.Scanning.Fluent;
 
-public interface IConventionStage : IConfigurationStage
+public interface IConventionStage
 {
     IScannableConventionStage RegisterConcreteTypesAgainstAllInterfaces();
     IScannableConventionStage RegisterConcreteTypesAgainstAllInterfaces(IEnumerable<Type> interfacesToExclude);
