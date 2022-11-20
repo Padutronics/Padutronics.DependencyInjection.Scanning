@@ -185,6 +185,12 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
         return WithConvention(new AllInterfacesScanConvention(interfacesToExclude));
     }
 
+    public IScannableConventionStage RegisterConcreteTypesAgainstInterface<TInterface>()
+        where TInterface : class
+    {
+        return WithConvention(InterfaceScanConvention.Create<TInterface>());
+    }
+
     public IScannableConventionStage RegisterConcreteTypesAgainstSelf()
     {
         return WithConvention<SelfScanConvention>();

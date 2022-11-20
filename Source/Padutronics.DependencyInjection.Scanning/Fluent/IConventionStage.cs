@@ -8,6 +8,8 @@ public interface IConventionStage : IConfigurationStage
 {
     IScannableConventionStage RegisterConcreteTypesAgainstAllInterfaces();
     IScannableConventionStage RegisterConcreteTypesAgainstAllInterfaces(IEnumerable<Type> interfacesToExclude);
+    IScannableConventionStage RegisterConcreteTypesAgainstInterface<TInterface>()
+        where TInterface : class;
     IScannableConventionStage RegisterConcreteTypesAgainstSelf();
     IScannableConventionStage RegisterFactories();
     IScannableConventionStage RegisterOpenTypesAgainstOpenInterfaces();
