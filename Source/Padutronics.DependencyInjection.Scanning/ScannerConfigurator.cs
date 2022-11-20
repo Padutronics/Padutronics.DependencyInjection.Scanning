@@ -12,7 +12,7 @@ using Trace = Padutronics.Diagnostics.Tracing.Trace<Padutronics.DependencyInject
 
 namespace Padutronics.DependencyInjection.Scanning;
 
-internal sealed class ScannerConfigurator : IScannerConfigurator, IConfigurationBuilder, IAssemblyWithFilterStage, IConfigurationStage, IConventionConfigurationStage
+internal sealed class ScannerConfigurator : IScannerConfigurator, IConfigurationBuilder, IAssemblyWithFilterStage, IConfigurationStage, IConventionWithConfigurationStage
 {
     private static readonly Action<IAssemblyConfigurator> defaultAssemblyConfigurationCallback = _ => { };
 
@@ -152,38 +152,38 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
         return IncludeConfiguration(new TModule());
     }
 
-    public IConventionConfigurationStage RegisterConcreteTypesAgainstAllInterfaces()
+    public IConventionWithConfigurationStage RegisterConcreteTypesAgainstAllInterfaces()
     {
         return WithConvention<AllInterfacesScanConvention>();
     }
 
-    public IConventionConfigurationStage RegisterConcreteTypesAgainstAllInterfaces(IEnumerable<Type> interfacesToExclude)
+    public IConventionWithConfigurationStage RegisterConcreteTypesAgainstAllInterfaces(IEnumerable<Type> interfacesToExclude)
     {
         return WithConvention(new AllInterfacesScanConvention(interfacesToExclude));
     }
 
-    public IConventionConfigurationStage RegisterConcreteTypesAgainstInterface<TInterface>()
+    public IConventionWithConfigurationStage RegisterConcreteTypesAgainstInterface<TInterface>()
         where TInterface : class
     {
         return WithConvention(InterfaceScanConvention.Create<TInterface>());
     }
 
-    public IConventionConfigurationStage RegisterConcreteTypesAgainstSelf()
+    public IConventionWithConfigurationStage RegisterConcreteTypesAgainstSelf()
     {
         return WithConvention<SelfScanConvention>();
     }
 
-    public IConventionConfigurationStage RegisterFactories()
+    public IConventionWithConfigurationStage RegisterFactories()
     {
         return WithConvention<FactoryScanConvention>();
     }
 
-    public IConventionConfigurationStage RegisterFactories(string typeNamePattern)
+    public IConventionWithConfigurationStage RegisterFactories(string typeNamePattern)
     {
         return WithConvention(new FactoryScanConvention(typeNamePattern));
     }
 
-    public IConventionConfigurationStage RegisterOpenTypesAgainstOpenInterfaces()
+    public IConventionWithConfigurationStage RegisterOpenTypesAgainstOpenInterfaces()
     {
         return WithConvention<OpenTypeScanConvention>();
     }
@@ -193,14 +193,14 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
         scanner.Scan(containerBuilder);
     }
 
-    public IConventionConfigurationStage WithConvention(IScanConvention convention)
+    public IConventionWithConfigurationStage WithConvention(IScanConvention convention)
     {
         scanner.AddConvention(convention);
 
         return this;
     }
 
-    public IConventionConfigurationStage WithConvention<TConvention>()
+    public IConventionWithConfigurationStage WithConvention<TConvention>()
         where TConvention : IScanConvention, new()
     {
         return WithConvention(new TConvention());
