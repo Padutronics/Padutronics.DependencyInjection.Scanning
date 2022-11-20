@@ -1,5 +1,6 @@
 using Padutronics.DependencyInjection.Scanning.Conventions;
 using Padutronics.DependencyInjection.Scanning.Fluent;
+using Padutronics.IO.Paths;
 using Padutronics.Reflection.Assemblies.Finders;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,16 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IScannableConv
         assemblyFinders.Add(assemblyFinder);
 
         return this;
+    }
+
+    public IConventionStage AssembliesFromPath(DirectoryPath path)
+    {
+        return AddAssemblyFinder(new PathAssemblyFinder(path));
+    }
+
+    public IConventionStage AssembliesFromPath(DirectoryPath path, bool includeExecutables)
+    {
+        return AddAssemblyFinder(new PathAssemblyFinder(path, includeExecutables));
     }
 
     public IConventionStage Assembly(string assemblyName)
