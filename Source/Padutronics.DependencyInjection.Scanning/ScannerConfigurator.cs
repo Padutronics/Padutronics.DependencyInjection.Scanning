@@ -201,6 +201,11 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
         return WithConvention<FactoryScanConvention>();
     }
 
+    public IScannableConventionStage RegisterFactories(string typeNamePattern)
+    {
+        return WithConvention(new FactoryScanConvention(typeNamePattern));
+    }
+
     public IScannableConventionStage RegisterOpenTypesAgainstOpenInterfaces()
     {
         return WithConvention<OpenTypeScanConvention>();

@@ -12,6 +12,7 @@ public interface IConventionStage
         where TInterface : class;
     IScannableConventionStage RegisterConcreteTypesAgainstSelf();
     IScannableConventionStage RegisterFactories();
+    IScannableConventionStage RegisterFactories(string typeNamePattern);
     IScannableConventionStage RegisterOpenTypesAgainstOpenInterfaces();
     IScannableConventionStage WithConvention(IScanConvention convention);
     IScannableConventionStage WithConvention<TConvention>()
