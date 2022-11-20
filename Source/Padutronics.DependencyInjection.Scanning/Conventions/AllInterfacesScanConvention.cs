@@ -1,3 +1,4 @@
+using Padutronics.DependencyInjection.Registration.Fluent;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,7 +27,7 @@ internal sealed class AllInterfacesScanConvention : IScanConvention
         this.interfacesToExclude = interfacesToExclude;
     }
 
-    public void Scan(TypeRegistry typeRegistry, IContainerBuilder containerBuilder, TypeRegistrationCallback registrationCallback)
+    public void Scan(TypeRegistry typeRegistry, IContainerBuilder containerBuilder, Action<Type, ILifetimeStage> registrationCallback)
     {
         foreach (Type type in typeRegistry.ClosedTypes.ConcreteTypes)
         {

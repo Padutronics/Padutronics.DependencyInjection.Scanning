@@ -1,3 +1,4 @@
+using Padutronics.DependencyInjection.Registration.Fluent;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,7 @@ namespace Padutronics.DependencyInjection.Scanning.Conventions;
 
 internal sealed class OpenTypeScanConvention : IScanConvention
 {
-    public void Scan(TypeRegistry typeRegistry, IContainerBuilder containerBuilder, TypeRegistrationCallback registrationCallback)
+    public void Scan(TypeRegistry typeRegistry, IContainerBuilder containerBuilder, Action<Type, ILifetimeStage> registrationCallback)
     {
         foreach (Type openType in typeRegistry.OpenTypes.ConcreteTypes)
         {

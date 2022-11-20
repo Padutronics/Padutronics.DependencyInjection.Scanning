@@ -1,3 +1,0 @@
-namespace Padutronics.DependencyInjection.Scanning;
-
-public delegate void ScannerConfigurationCallback(IScannerConfigurator scannerConfigurator);

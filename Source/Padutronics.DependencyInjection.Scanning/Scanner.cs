@@ -1,3 +1,4 @@
+using Padutronics.DependencyInjection.Registration.Fluent;
 using Padutronics.DependencyInjection.Scanning.Conventions;
 using Padutronics.DependencyInjection.Scanning.Filters;
 using Padutronics.Reflection.Assemblies.Finders;
@@ -16,9 +17,9 @@ internal sealed class Scanner
     private readonly ICollection<IScanConvention> conventions = new List<IScanConvention>();
     private readonly ICollection<ITypeFilter> excludeFilters = new List<ITypeFilter>();
     private readonly ICollection<ITypeFilter> includeFilters = new List<ITypeFilter>();
-    private readonly IDictionary<Type, TypeConfigurationCallback> typeToConfigurationCallbackMappings = new Dictionary<Type, TypeConfigurationCallback>();
+    private readonly IDictionary<Type, Action<ILifetimeStage>> typeToConfigurationCallbackMappings = new Dictionary<Type, Action<ILifetimeStage>>();
 
-    public void AddAssemblyFinder(IAssemblyFinder assemblyFinder, AssemblyConfigurationCallback configurationCallback)
+    public void AddAssemblyFinder(IAssemblyFinder assemblyFinder, Action<IAssemblyConfigurator> configurationCallback)
     {
         Trace.Call($"Added assembly finder: {assemblyFinder.GetType()}.");
 
@@ -29,7 +30,7 @@ internal sealed class Scanner
         configurationCallback(configurator);
     }
 
-    public void AddConfiguration(Type type, TypeConfigurationCallback configurationCallback)
+    public void AddConfiguration(Type type, Action<ILifetimeStage> configurationCallback)
     {
         Trace.Call($"Added configuration for type: {type}.");
 
@@ -118,7 +119,7 @@ internal sealed class Scanner
         {
             convention.Scan(typeRegistry, containerBuilder, (type, lifetimeStage) =>
             {
-                if (typeToConfigurationCallbackMappings.TryGetValue(type, out TypeConfigurationCallback? configurator))
+                if (typeToConfigurationCallbackMappings.TryGetValue(type, out Action<ILifetimeStage>? configurator))
                 {
                     configurator(lifetimeStage);
                 }

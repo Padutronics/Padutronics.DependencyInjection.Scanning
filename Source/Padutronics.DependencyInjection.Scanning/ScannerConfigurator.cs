@@ -1,3 +1,4 @@
+using Padutronics.DependencyInjection.Registration.Fluent;
 using Padutronics.DependencyInjection.Scanning.Conventions;
 using Padutronics.DependencyInjection.Scanning.Filters;
 using Padutronics.DependencyInjection.Scanning.Fluent;
@@ -13,7 +14,7 @@ namespace Padutronics.DependencyInjection.Scanning;
 
 internal sealed class ScannerConfigurator : IScannerConfigurator, IConfigurationBuilder, IAssemblyWithFilterStage, IConfigurationStage, IConventionConfigurationStage
 {
-    private static readonly AssemblyConfigurationCallback defaultAssemblyConfigurationCallback = _ => { };
+    private static readonly Action<IAssemblyConfigurator> defaultAssemblyConfigurationCallback = _ => { };
 
     private readonly Scanner scanner = new Scanner();
 
@@ -22,7 +23,7 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
         return AssembliesFromPath(path, defaultAssemblyConfigurationCallback);
     }
 
-    public IAssemblyWithFilterStage AssembliesFromPath(DirectoryPath path, AssemblyConfigurationCallback configurationCallback)
+    public IAssemblyWithFilterStage AssembliesFromPath(DirectoryPath path, Action<IAssemblyConfigurator> configurationCallback)
     {
         scanner.AddAssemblyFinder(new PathAssemblyFinder(path), configurationCallback);
 
@@ -34,7 +35,7 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
         return AssembliesFromPath(path, includeExecutables, defaultAssemblyConfigurationCallback);
     }
 
-    public IAssemblyWithFilterStage AssembliesFromPath(DirectoryPath path, bool includeExecutables, AssemblyConfigurationCallback configurationCallback)
+    public IAssemblyWithFilterStage AssembliesFromPath(DirectoryPath path, bool includeExecutables, Action<IAssemblyConfigurator> configurationCallback)
     {
         scanner.AddAssemblyFinder(new PathAssemblyFinder(path, includeExecutables), configurationCallback);
 
@@ -46,7 +47,7 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
         return Assembly(assemblyName, defaultAssemblyConfigurationCallback);
     }
 
-    public IAssemblyWithFilterStage Assembly(string assemblyName, AssemblyConfigurationCallback configurationCallback)
+    public IAssemblyWithFilterStage Assembly(string assemblyName, Action<IAssemblyConfigurator> configurationCallback)
     {
         return Assembly(System.Reflection.Assembly.Load(assemblyName), configurationCallback);
     }
@@ -56,7 +57,7 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
         return Assembly(assembly, defaultAssemblyConfigurationCallback);
     }
 
-    public IAssemblyWithFilterStage Assembly(Assembly assembly, AssemblyConfigurationCallback configurationCallback)
+    public IAssemblyWithFilterStage Assembly(Assembly assembly, Action<IAssemblyConfigurator> configurationCallback)
     {
         scanner.AddAssemblyFinder(new ConstantAssemblyFinder(assembly), configurationCallback);
 
@@ -68,7 +69,7 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
         return AssemblyContaining(type, defaultAssemblyConfigurationCallback);
     }
 
-    public IAssemblyWithFilterStage AssemblyContaining(Type type, AssemblyConfigurationCallback configurationCallback)
+    public IAssemblyWithFilterStage AssemblyContaining(Type type, Action<IAssemblyConfigurator> configurationCallback)
     {
         scanner.AddAssemblyFinder(new TypeAssemblyFinder(type), configurationCallback);
 
@@ -80,19 +81,19 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
         return AssemblyContaining<T>(defaultAssemblyConfigurationCallback);
     }
 
-    public IAssemblyWithFilterStage AssemblyContaining<T>(AssemblyConfigurationCallback configurationCallback)
+    public IAssemblyWithFilterStage AssemblyContaining<T>(Action<IAssemblyConfigurator> configurationCallback)
     {
         return AssemblyContaining(typeof(T), configurationCallback);
     }
 
-    public IConfigurationStage Configure(Type type, TypeConfigurationCallback configurationCallback)
+    public IConfigurationStage Configure(Type type, Action<ILifetimeStage> configurationCallback)
     {
         scanner.AddConfiguration(type, configurationCallback);
 
         return this;
     }
 
-    public IConfigurationStage Configure<T>(TypeConfigurationCallback configurationCallback)
+    public IConfigurationStage Configure<T>(Action<ILifetimeStage> configurationCallback)
     {
         return Configure(typeof(T), configurationCallback);
     }

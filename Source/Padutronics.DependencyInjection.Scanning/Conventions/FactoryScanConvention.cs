@@ -1,3 +1,4 @@
+using Padutronics.DependencyInjection.Registration.Fluent;
 using System;
 using System.Text.RegularExpressions;
 
@@ -17,7 +18,7 @@ internal sealed class FactoryScanConvention : IScanConvention
         this.typeNamePattern = typeNamePattern;
     }
 
-    public void Scan(TypeRegistry typeRegistry, IContainerBuilder containerBuilder, TypeRegistrationCallback registrationCallback)
+    public void Scan(TypeRegistry typeRegistry, IContainerBuilder containerBuilder, Action<Type, ILifetimeStage> registrationCallback)
     {
         var regularExpression = new Regex(typeNamePattern);
 

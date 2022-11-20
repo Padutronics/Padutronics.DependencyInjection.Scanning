@@ -1,3 +1,4 @@
+using Padutronics.DependencyInjection.Registration.Fluent;
 using Padutronics.Generics;
 using System;
 
@@ -23,8 +24,8 @@ internal sealed class InterfaceScanConvention : IScanConvention
 
         return new InterfaceScanConvention(interfaceType);
     }
-    
-    public void Scan(TypeRegistry typeRegistry, IContainerBuilder containerBuilder, TypeRegistrationCallback registrationCallback)
+
+    public void Scan(TypeRegistry typeRegistry, IContainerBuilder containerBuilder, Action<Type, ILifetimeStage> registrationCallback)
     {
         foreach (Type type in typeRegistry.ClosedTypes.ConcreteTypes)
         {
