@@ -10,7 +10,7 @@ using System.Reflection;
 
 namespace Padutronics.DependencyInjection.Scanning;
 
-internal sealed class ScannerConfigurator : IScannerConfigurator, IAssemblyWithFilterStage, IScannableConfigurationStage, IScannableConventionStage
+internal sealed class ScannerConfigurator : IScannerConfigurator, IConfigurationBuilder, IAssemblyWithFilterStage, IScannableConfigurationStage, IScannableConventionStage
 {
     private static readonly AssemblyConfigurationCallback defaultAssemblyConfigurationCallback = _ => { };
 
@@ -160,6 +160,19 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IAssemblyWithF
         where TFilter : ITypeFilter, new()
     {
         return Include(new TFilter());
+    }
+
+    public IScannableConfigurationStage IncludeConfiguration(IConfigurationModule module)
+    {
+        module.Load(configurationBuilder: this);
+
+        return this;
+    }
+
+    public IScannableConfigurationStage IncludeConfiguration<TModule>()
+        where TModule : IConfigurationModule, new()
+    {
+        return IncludeConfiguration(new TModule());
     }
 
     public void Scan(IContainerBuilder containerBuilder)
