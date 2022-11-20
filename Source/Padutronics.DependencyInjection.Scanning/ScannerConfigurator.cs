@@ -16,7 +16,7 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
 {
     private static readonly Action<IAssemblyConfigurator> defaultAssemblyConfigurationCallback = _ => { };
 
-    private readonly Scanner scanner = new Scanner();
+    private readonly Scanner scanner = new();
 
     public IAssemblyWithFilterStage AssembliesFromPath(DirectoryPath path)
     {
