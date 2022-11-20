@@ -4,9 +4,9 @@ namespace Padutronics.DependencyInjection.Scanning.Fluent;
 
 public interface IConfigurationStage
 {
-    IScannableConfigurationStage Configure(Type type, TypeConfigurationCallback configurationCallback);
-    IScannableConfigurationStage Configure<T>(TypeConfigurationCallback configurationCallback);
-    IScannableConfigurationStage IncludeConfiguration(IConfigurationModule module);
-    IScannableConfigurationStage IncludeConfiguration<TModule>()
+    IConfigurationStage Configure(Type type, TypeConfigurationCallback configurationCallback);
+    IConfigurationStage Configure<T>(TypeConfigurationCallback configurationCallback);
+    IConfigurationStage IncludeConfiguration(IConfigurationModule module);
+    IConfigurationStage IncludeConfiguration<TModule>()
         where TModule : IConfigurationModule, new();
 }

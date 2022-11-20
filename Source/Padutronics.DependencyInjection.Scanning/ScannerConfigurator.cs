@@ -11,7 +11,7 @@ using Trace = Padutronics.Diagnostics.Tracing.Trace<Padutronics.DependencyInject
 
 namespace Padutronics.DependencyInjection.Scanning;
 
-internal sealed class ScannerConfigurator : IScannerConfigurator, IConfigurationBuilder, IAssemblyWithFilterStage, IScannableConfigurationStage, IScannableConventionStage
+internal sealed class ScannerConfigurator : IScannerConfigurator, IConfigurationBuilder, IAssemblyWithFilterStage, IConfigurationStage, IConventionConfigurationStage
 {
     private static readonly AssemblyConfigurationCallback defaultAssemblyConfigurationCallback = _ => { };
 
@@ -85,14 +85,14 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
         return AssemblyContaining(typeof(T), configurationCallback);
     }
 
-    public IScannableConfigurationStage Configure(Type type, TypeConfigurationCallback configurationCallback)
+    public IConfigurationStage Configure(Type type, TypeConfigurationCallback configurationCallback)
     {
         scanner.AddConfiguration(type, configurationCallback);
 
         return this;
     }
 
-    public IScannableConfigurationStage Configure<T>(TypeConfigurationCallback configurationCallback)
+    public IConfigurationStage Configure<T>(TypeConfigurationCallback configurationCallback)
     {
         return Configure(typeof(T), configurationCallback);
     }
@@ -133,7 +133,7 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
         return Include(new TFilter());
     }
 
-    public IScannableConfigurationStage IncludeConfiguration(IConfigurationModule module)
+    public IConfigurationStage IncludeConfiguration(IConfigurationModule module)
     {
         Trace.CallStart();
         Trace.Information($"Including configuration module: {module.GetType()}");
@@ -145,44 +145,44 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
         return this;
     }
 
-    public IScannableConfigurationStage IncludeConfiguration<TModule>()
+    public IConfigurationStage IncludeConfiguration<TModule>()
         where TModule : IConfigurationModule, new()
     {
         return IncludeConfiguration(new TModule());
     }
 
-    public IScannableConventionStage RegisterConcreteTypesAgainstAllInterfaces()
+    public IConventionConfigurationStage RegisterConcreteTypesAgainstAllInterfaces()
     {
         return WithConvention<AllInterfacesScanConvention>();
     }
 
-    public IScannableConventionStage RegisterConcreteTypesAgainstAllInterfaces(IEnumerable<Type> interfacesToExclude)
+    public IConventionConfigurationStage RegisterConcreteTypesAgainstAllInterfaces(IEnumerable<Type> interfacesToExclude)
     {
         return WithConvention(new AllInterfacesScanConvention(interfacesToExclude));
     }
 
-    public IScannableConventionStage RegisterConcreteTypesAgainstInterface<TInterface>()
+    public IConventionConfigurationStage RegisterConcreteTypesAgainstInterface<TInterface>()
         where TInterface : class
     {
         return WithConvention(InterfaceScanConvention.Create<TInterface>());
     }
 
-    public IScannableConventionStage RegisterConcreteTypesAgainstSelf()
+    public IConventionConfigurationStage RegisterConcreteTypesAgainstSelf()
     {
         return WithConvention<SelfScanConvention>();
     }
 
-    public IScannableConventionStage RegisterFactories()
+    public IConventionConfigurationStage RegisterFactories()
     {
         return WithConvention<FactoryScanConvention>();
     }
 
-    public IScannableConventionStage RegisterFactories(string typeNamePattern)
+    public IConventionConfigurationStage RegisterFactories(string typeNamePattern)
     {
         return WithConvention(new FactoryScanConvention(typeNamePattern));
     }
 
-    public IScannableConventionStage RegisterOpenTypesAgainstOpenInterfaces()
+    public IConventionConfigurationStage RegisterOpenTypesAgainstOpenInterfaces()
     {
         return WithConvention<OpenTypeScanConvention>();
     }
@@ -192,14 +192,14 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IConfiguration
         scanner.Scan(containerBuilder);
     }
 
-    public IScannableConventionStage WithConvention(IScanConvention convention)
+    public IConventionConfigurationStage WithConvention(IScanConvention convention)
     {
         scanner.AddConvention(convention);
 
         return this;
     }
 
-    public IScannableConventionStage WithConvention<TConvention>()
+    public IConventionConfigurationStage WithConvention<TConvention>()
         where TConvention : IScanConvention, new()
     {
         return WithConvention(new TConvention());

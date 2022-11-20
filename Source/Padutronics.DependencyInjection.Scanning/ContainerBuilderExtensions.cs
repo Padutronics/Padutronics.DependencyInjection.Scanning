@@ -8,8 +8,11 @@ public static class ContainerBuilderExtensions
     {
         Trace.CallStart(typeof(ContainerBuilderExtensions), "Started container scanner configuring.");
 
-        IScannable scannable = configurationCallback(new ScannerConfigurator());
-        scannable.Scan(@this);
+        var configurator = new ScannerConfigurator();
+
+        configurationCallback(configurator);
+
+        configurator.Scan(containerBuilder: @this);
 
         Trace.CallEnd(typeof(ContainerBuilderExtensions), "Finished container scanner configuring.");
     }

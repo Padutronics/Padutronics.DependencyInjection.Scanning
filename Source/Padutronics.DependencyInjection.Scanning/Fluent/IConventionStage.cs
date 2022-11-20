@@ -6,15 +6,15 @@ namespace Padutronics.DependencyInjection.Scanning.Fluent;
 
 public interface IConventionStage
 {
-    IScannableConventionStage RegisterConcreteTypesAgainstAllInterfaces();
-    IScannableConventionStage RegisterConcreteTypesAgainstAllInterfaces(IEnumerable<Type> interfacesToExclude);
-    IScannableConventionStage RegisterConcreteTypesAgainstInterface<TInterface>()
+    IConventionConfigurationStage RegisterConcreteTypesAgainstAllInterfaces();
+    IConventionConfigurationStage RegisterConcreteTypesAgainstAllInterfaces(IEnumerable<Type> interfacesToExclude);
+    IConventionConfigurationStage RegisterConcreteTypesAgainstInterface<TInterface>()
         where TInterface : class;
-    IScannableConventionStage RegisterConcreteTypesAgainstSelf();
-    IScannableConventionStage RegisterFactories();
-    IScannableConventionStage RegisterFactories(string typeNamePattern);
-    IScannableConventionStage RegisterOpenTypesAgainstOpenInterfaces();
-    IScannableConventionStage WithConvention(IScanConvention convention);
-    IScannableConventionStage WithConvention<TConvention>()
+    IConventionConfigurationStage RegisterConcreteTypesAgainstSelf();
+    IConventionConfigurationStage RegisterFactories();
+    IConventionConfigurationStage RegisterFactories(string typeNamePattern);
+    IConventionConfigurationStage RegisterOpenTypesAgainstOpenInterfaces();
+    IConventionConfigurationStage WithConvention(IScanConvention convention);
+    IConventionConfigurationStage WithConvention<TConvention>()
         where TConvention : IScanConvention, new();
 }
