@@ -6,16 +6,16 @@ namespace Padutronics.DependencyInjection.Scanning.Fluent;
 
 public interface IAssemblyStage
 {
-    IConventionStage AssembliesFromPath(DirectoryPath path);
-    IConventionStage AssembliesFromPath(DirectoryPath path, AssemblyConfigurationCallback configurationCallback);
-    IConventionStage AssembliesFromPath(DirectoryPath path, bool includeExecutables);
-    IConventionStage AssembliesFromPath(DirectoryPath path, bool includeExecutables, AssemblyConfigurationCallback configurationCallback);
-    IConventionStage Assembly(string assemblyName);
-    IConventionStage Assembly(string assemblyName, AssemblyConfigurationCallback configurationCallback);
-    IConventionStage Assembly(Assembly assembly);
-    IConventionStage Assembly(Assembly assembly, AssemblyConfigurationCallback configurationCallback);
-    IConventionStage AssemblyContaining(Type type);
-    IConventionStage AssemblyContaining(Type type, AssemblyConfigurationCallback configurationCallback);
-    IConventionStage AssemblyContaining<T>();
-    IConventionStage AssemblyContaining<T>(AssemblyConfigurationCallback configurationCallback);
+    IAssemblyWithFilterStage AssembliesFromPath(DirectoryPath path);
+    IAssemblyWithFilterStage AssembliesFromPath(DirectoryPath path, AssemblyConfigurationCallback configurationCallback);
+    IAssemblyWithFilterStage AssembliesFromPath(DirectoryPath path, bool includeExecutables);
+    IAssemblyWithFilterStage AssembliesFromPath(DirectoryPath path, bool includeExecutables, AssemblyConfigurationCallback configurationCallback);
+    IAssemblyWithFilterStage Assembly(string assemblyName);
+    IAssemblyWithFilterStage Assembly(string assemblyName, AssemblyConfigurationCallback configurationCallback);
+    IAssemblyWithFilterStage Assembly(Assembly assembly);
+    IAssemblyWithFilterStage Assembly(Assembly assembly, AssemblyConfigurationCallback configurationCallback);
+    IAssemblyWithFilterStage AssemblyContaining(Type type);
+    IAssemblyWithFilterStage AssemblyContaining(Type type, AssemblyConfigurationCallback configurationCallback);
+    IAssemblyWithFilterStage AssemblyContaining<T>();
+    IAssemblyWithFilterStage AssemblyContaining<T>(AssemblyConfigurationCallback configurationCallback);
 }

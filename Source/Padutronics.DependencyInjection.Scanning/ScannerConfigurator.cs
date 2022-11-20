@@ -1,4 +1,5 @@
 using Padutronics.DependencyInjection.Scanning.Conventions;
+using Padutronics.DependencyInjection.Scanning.Filters;
 using Padutronics.DependencyInjection.Scanning.Fluent;
 using Padutronics.IO.Paths;
 using Padutronics.Reflection.Assemblies.Finders;
@@ -9,14 +10,16 @@ using System.Reflection;
 
 namespace Padutronics.DependencyInjection.Scanning;
 
-internal sealed class ScannerConfigurator : IScannerConfigurator, IScannableConventionStage
+internal sealed class ScannerConfigurator : IScannerConfigurator, IAssemblyWithFilterStage, IScannableConventionStage
 {
     private static readonly AssemblyConfigurationCallback defaultAssemblyConfigurationCallback = _ => { };
 
     private readonly ICollection<IAssemblyConfigurationBuilder> assemblyConfigurationBuilders = new List<IAssemblyConfigurationBuilder>();
     private readonly ICollection<IScanConvention> conventions = new List<IScanConvention>();
+    private readonly ICollection<ITypeFilter> excludeFilters = new List<ITypeFilter>();
+    private readonly ICollection<ITypeFilter> includeFilters = new List<ITypeFilter>();
 
-    private IConventionStage AddAssemblyConfigurationBuilder(IAssemblyFinder assemblyFinder, AssemblyConfigurationCallback configurationCallback)
+    private IAssemblyWithFilterStage AddAssemblyConfigurationBuilder(IAssemblyFinder assemblyFinder, AssemblyConfigurationCallback configurationCallback)
     {
         var configurator = new AssemblyConfigurator(assemblyFinder);
 
@@ -27,64 +30,82 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IScannableConv
         return this;
     }
 
-    public IConventionStage AssembliesFromPath(DirectoryPath path)
+    public IAssemblyWithFilterStage AssembliesFromPath(DirectoryPath path)
     {
         return AssembliesFromPath(path, defaultAssemblyConfigurationCallback);
     }
 
-    public IConventionStage AssembliesFromPath(DirectoryPath path, AssemblyConfigurationCallback configurationCallback)
+    public IAssemblyWithFilterStage AssembliesFromPath(DirectoryPath path, AssemblyConfigurationCallback configurationCallback)
     {
         return AddAssemblyConfigurationBuilder(new PathAssemblyFinder(path), configurationCallback);
     }
 
-    public IConventionStage AssembliesFromPath(DirectoryPath path, bool includeExecutables)
+    public IAssemblyWithFilterStage AssembliesFromPath(DirectoryPath path, bool includeExecutables)
     {
         return AssembliesFromPath(path, includeExecutables, defaultAssemblyConfigurationCallback);
     }
 
-    public IConventionStage AssembliesFromPath(DirectoryPath path, bool includeExecutables, AssemblyConfigurationCallback configurationCallback)
+    public IAssemblyWithFilterStage AssembliesFromPath(DirectoryPath path, bool includeExecutables, AssemblyConfigurationCallback configurationCallback)
     {
         return AddAssemblyConfigurationBuilder(new PathAssemblyFinder(path, includeExecutables), configurationCallback);
     }
 
-    public IConventionStage Assembly(string assemblyName)
+    public IAssemblyWithFilterStage Assembly(string assemblyName)
     {
         return Assembly(assemblyName, defaultAssemblyConfigurationCallback);
     }
 
-    public IConventionStage Assembly(string assemblyName, AssemblyConfigurationCallback configurationCallback)
+    public IAssemblyWithFilterStage Assembly(string assemblyName, AssemblyConfigurationCallback configurationCallback)
     {
         return Assembly(System.Reflection.Assembly.Load(assemblyName), configurationCallback);
     }
 
-    public IConventionStage Assembly(Assembly assembly)
+    public IAssemblyWithFilterStage Assembly(Assembly assembly)
     {
         return Assembly(assembly, defaultAssemblyConfigurationCallback);
     }
 
-    public IConventionStage Assembly(Assembly assembly, AssemblyConfigurationCallback configurationCallback)
+    public IAssemblyWithFilterStage Assembly(Assembly assembly, AssemblyConfigurationCallback configurationCallback)
     {
         return AddAssemblyConfigurationBuilder(new ConstantAssemblyFinder(assembly), configurationCallback);
     }
 
-    public IConventionStage AssemblyContaining(Type type)
+    public IAssemblyWithFilterStage AssemblyContaining(Type type)
     {
         return AssemblyContaining(type, defaultAssemblyConfigurationCallback);
     }
 
-    public IConventionStage AssemblyContaining(Type type, AssemblyConfigurationCallback configurationCallback)
+    public IAssemblyWithFilterStage AssemblyContaining(Type type, AssemblyConfigurationCallback configurationCallback)
     {
         return AddAssemblyConfigurationBuilder(new TypeAssemblyFinder(type), configurationCallback);
     }
 
-    public IConventionStage AssemblyContaining<T>()
+    public IAssemblyWithFilterStage AssemblyContaining<T>()
     {
         return AssemblyContaining<T>(defaultAssemblyConfigurationCallback);
     }
 
-    public IConventionStage AssemblyContaining<T>(AssemblyConfigurationCallback configurationCallback)
+    public IAssemblyWithFilterStage AssemblyContaining<T>(AssemblyConfigurationCallback configurationCallback)
     {
         return AssemblyContaining(typeof(T), configurationCallback);
+    }
+
+    public IFilterStage Exclude(Predicate<Type> predicate)
+    {
+        return Exclude(new PredicateTypeFilter(predicate));
+    }
+
+    public IFilterStage Exclude(ITypeFilter filter)
+    {
+        excludeFilters.Add(filter);
+
+        return this;
+    }
+
+    public IFilterStage Exclude<TFilter>()
+        where TFilter : ITypeFilter, new()
+    {
+        return Exclude(new TFilter());
     }
 
     private IEnumerable<Type> GetAllTypes()
@@ -98,11 +119,46 @@ internal sealed class ScannerConfigurator : IScannerConfigurator, IScannableConv
             );
     }
 
+    private IEnumerable<Type> GetExcludedTypes(IEnumerable<Type> allTypes)
+    {
+        return allTypes.Where(type => excludeFilters.Any(filter => filter.IsValid(type)));
+    }
+
+    private IEnumerable<Type> GetIncludedTypes(IEnumerable<Type> allTypes)
+    {
+        return includeFilters.Any()
+            ? allTypes.Where(type => includeFilters.Any(filter => filter.IsValid(type)))
+            : allTypes;
+    }
+
+    public IFilterStage Include(Predicate<Type> predicate)
+    {
+        return Include(new PredicateTypeFilter(predicate));
+    }
+
+    public IFilterStage Include(ITypeFilter filter)
+    {
+        includeFilters.Add(filter);
+
+        return this;
+    }
+
+    public IFilterStage Include<TFilter>()
+        where TFilter : ITypeFilter, new()
+    {
+        return Include(new TFilter());
+    }
+
     public void Scan(IContainerBuilder containerBuilder)
     {
         IEnumerable<Type> allTypes = GetAllTypes();
 
-        var typeRegistry = new TypeRegistry(allTypes);
+        IEnumerable<Type> includedTypes = GetIncludedTypes(allTypes);
+        IEnumerable<Type> excludedTypes = GetExcludedTypes(allTypes);
+
+        includedTypes = includedTypes.Except(excludedTypes);
+
+        var typeRegistry = new TypeRegistry(includedTypes);
 
         foreach (IScanConvention convention in conventions)
         {
