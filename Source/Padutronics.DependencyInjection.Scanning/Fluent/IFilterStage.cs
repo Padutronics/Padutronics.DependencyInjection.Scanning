@@ -3,7 +3,7 @@ using System;
 
 namespace Padutronics.DependencyInjection.Scanning.Fluent;
 
-public interface IFilterStage
+public interface IFilterStage : IConventionStage
 {
     IFilterStage Exclude(Predicate<Type> predicate);
     IFilterStage Exclude(ITypeFilter filter);
