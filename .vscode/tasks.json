@@ -22,6 +22,17 @@
                 "cwd": "${workspaceFolder}"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "test",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "test",
+                "${workspaceFolder}/Tests/Padutronics.DependencyInjection.Scanning.Tests/Padutronics.DependencyInjection.Scanning.Tests.csproj"
+            ],
+            "group": "test",
+            "problemMatcher": "$msCompile"
         }
     ]
 }
