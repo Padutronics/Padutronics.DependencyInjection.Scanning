@@ -15,6 +15,45 @@
             "problemMatcher": "$msCompile"
         },
         {
+            "label": "bump version major",
+            "type": "shell",
+            "command": "BumpVersion.ps1",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "args": [
+                "-Kind",
+                "Major"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "bump version minor",
+            "type": "shell",
+            "command": "BumpVersion.ps1",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "args": [
+                "-Kind",
+                "Minor"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "bump version patch",
+            "type": "shell",
+            "command": "BumpVersion.ps1",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "args": [
+                "-Kind",
+                "Patch"
+            ],
+            "problemMatcher": []
+        },
+        {
             "label": "publish",
             "type": "shell",
             "command": "PublishNuGetPackage.ps1",
